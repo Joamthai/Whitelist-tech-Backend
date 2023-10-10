@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String     @unique
+  mobile    String     @unique
+  password  String
+  role      UserRole
+  addresses Address[]
+  orders    Order[]
+  cartItems CartItem[]
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model Address {
+  id          Int    @id @default(autoincrement())
+  address     String
+  subDistrict String
+  district    String
+  province    String
+  country     String
+  postalCode  String
+  userId      Int
+  user        User   @relation(fields: [userId], references: [id])
+}
+
+model Order {
+  id           Int            @id @default(autoincrement())
+  paySlip      String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime
+  status       OrderStatus
+  userId       Int
+  user         User           @relation(fields: [userId], references: [id])
+  orderitems   Orderitem[]
+  shippingInfo ShippingInfo[]
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+}
+
+model Product {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String
+  image       String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime
+  stock       Int
+  price       Decimal     @db.Decimal(10, 2)
+  categoryId  Int
+  category    Category    @relation(fields: [categoryId], references: [id])
+  orderitems  Orderitem[]
+  cartItems   CartItem[]
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  products Product[]
+}
+
+model Orderitem {
+  id         Int     @id @default(autoincrement())
+  price      Decimal @db.Decimal(10, 2)
+  amount     Int
+  tatolPrice Decimal @db.Decimal(10, 2)
+  orderId    Int
+  order      Order   @relation(fields: [orderId], references: [id])
+  productId  Int
+  product    Product @relation(fields: [productId], references: [id])
+}
+
+model ShippingInfo {
+  id             Int    @id @default(autoincrement())
+  carrier        String
+  trackingNumber String
+  orderId        Int
+  order          Order  @relation(fields: [orderId], references: [id])
+}
+
+model CartItem {
+  id        Int     @id @default(autoincrement())
+  amount    Int
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+}
