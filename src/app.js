@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const notFoundMW = require('./middlewares/not-found');
 const errorMW = require('./middlewares/error');
 const rateLimitMW = require('./middlewares/rate-limit');
+const authRoute = require('./routes/auth-route');
 
 const app = express();
 
@@ -13,6 +14,8 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(rateLimitMW);
 app.use(express.json());
+
+app.use('/auth', authRoute);
 
 app.use(notFoundMW);
 app.use(errorMW);
