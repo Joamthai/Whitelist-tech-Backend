@@ -26,7 +26,7 @@ exports.signUp = async (req, res, next) => {
       { expiresIn: process.env.JWT_EXPIRE }
     );
 
-    res.status(201).json({ accessToken });
+    res.status(201).json({ user, accessToken });
   } catch (error) {
     next(error);
   }
@@ -46,12 +46,11 @@ exports.login = async (req, res, next) => {
     });
 
     if (!user) {
-      return next(createError('USER NOT FOUND', 400));
+      return next(createError('SOMETHING WRONG PLEASE TRY AGAIN', 400));
     }
-
     const match = await bcrypt.compare(value.password, user.password);
     if (!match) {
-      return next(createError('INVALID PASSWORD'));
+      return next(createError('SOMETHING WRONG PLEASE TRY AGAIN', 400));
     }
 
     const payload = { userId: user.id, role: user.role };
@@ -62,8 +61,12 @@ exports.login = async (req, res, next) => {
     );
 
     delete user.password;
-    res.status(201).json({ accessToken, user });
+    res.status(201).json({ user, accessToken });
   } catch (error) {
     next(error);
   }
+};
+
+exports.getMe = (req, res, next) => {
+  res.status(200).json({ user: req.user });
 };

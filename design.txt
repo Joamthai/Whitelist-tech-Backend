@@ -2,6 +2,21 @@
 POST /auth/sign-up
 BODY firstName, lastName, email, password, confirmPassword
 RESPONSE
-201 { accessToken: String }
+201 { user:{id:"...", firstName:"...", lastName:"...", email:"...", mobile:"...", role:"..." }, accessToken: String, }
 400 { message: String }
+500 { message: String }
+
+#LOGIN
+POST email, password
+RESPONSE
+201 { user:{id:"...", firstName:"...", lastName:"...", email:"...", mobile:"...", role:"..." }, accessToken: String, }
+400 { message: String }
+500 { message: String }
+
+#AUTHENTICATED
+GET /auth/me
+HEADER AUTHORIZATION Bearer ACCESS_TOKEN
+RESPONSE
+201 { user:{id:"...", firstName:"...", lastName:"...", email:"...", mobile:"...", role:"..." }, accessToken: String, }
+401 { message: String }
 500 { message: String }
