@@ -15,6 +15,8 @@ model User {
   mobile    String?    @unique
   password  String
   role      UserRole?  @default(USER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   addresses Address[]
   orders    Order[]
   cartItems CartItem[]
@@ -26,22 +28,25 @@ enum UserRole {
 }
 
 model Address {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
+  title       String
   address     String
   subDistrict String
   district    String
   province    String
   country     String
   postalCode  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   userId      Int
-  user        User   @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Order {
   id           Int            @id @default(autoincrement())
   paySlip      String
   createdAt    DateTime       @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime       @updatedAt
   status       OrderStatus
   userId       Int
   user         User           @relation(fields: [userId], references: [id])
@@ -62,7 +67,7 @@ model Product {
   description String
   image       String
   createdAt   DateTime    @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime    @updatedAt
   stock       Int
   price       Decimal     @db.Decimal(10, 2)
   categoryId  Int
