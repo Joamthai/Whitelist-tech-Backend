@@ -74,3 +74,12 @@ exports.deleteAddress = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getAllAddress = async (req, res, next) => {
+  const addresses = await prisma.address.findMany({
+    where: {
+      userId: req.user.id,
+    },
+  });
+  res.status(200).json({ addresses });
+};

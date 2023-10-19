@@ -105,7 +105,7 @@ model CartItem {
   id        Int     @id @default(autoincrement())
   amount    Int
   productId Int
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId    Int
-  user      User    @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

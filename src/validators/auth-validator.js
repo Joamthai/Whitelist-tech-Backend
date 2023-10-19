@@ -25,3 +25,9 @@ const loginSchema = Joi.object({
 });
 
 exports.loginSchema = loginSchema;
+
+const checkUserSchema = Joi.object({
+  userId: Joi.number().integer().positive().required(),
+});
+
+exports.checkUserSchema = checkUserSchema;

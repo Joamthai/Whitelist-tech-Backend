@@ -9,6 +9,7 @@ const rateLimitMW = require('./middlewares/rate-limit');
 const authRoute = require('./routes/auth-route');
 const profileRoute = require('./routes/profile-route');
 const productRoute = require('./routes/product-route');
+const cartRoute = require('./routes/cart-route');
 
 const app = express();
 
@@ -16,10 +17,12 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(rateLimitMW);
 app.use(express.json());
+app.use(express.static('public'));
 
 app.use('/auth', authRoute);
 app.use('/profile', profileRoute);
 app.use('/product', productRoute);
+app.use('/cart', cartRoute);
 
 app.use(notFoundMW);
 app.use(errorMW);
