@@ -40,8 +40,7 @@ model Address {
   updatedAt   DateTime @updatedAt
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
-  orderId     Int
-  order       Order    @relation(fields: [orderId], references: [id])
+  orders      Order[]
 }
 
 model Order {
@@ -49,12 +48,13 @@ model Order {
   paySlip      String
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
-  status       OrderStatus
+  status       OrderStatus    @default(PENDING)
   userId       Int
   user         User           @relation(fields: [userId], references: [id])
-  orderitems   Orderitem[]
+  addressId    Int
+  address      Address        @relation(fields: [addressId], references: [id])
+  orderItems   OrderItem[]
   shippingInfo ShippingInfo[]
-  Address      Address[]
 }
 
 enum OrderStatus {
@@ -75,7 +75,7 @@ model Product {
   price       Decimal     @db.Decimal(10, 2)
   categoryId  Int
   category    Category    @relation(fields: [categoryId], references: [id])
-  orderitems  Orderitem[]
+  orderItems  OrderItem[]
   cartItems   CartItem[]
 }
 
@@ -85,11 +85,11 @@ model Category {
   products Product[]
 }
 
-model Orderitem {
+model OrderItem {
   id         Int     @id @default(autoincrement())
   price      Decimal @db.Decimal(10, 2)
   amount     Int
-  tatolPrice Decimal @db.Decimal(10, 2)
+  totalPrice Decimal @db.Decimal(10, 2)
   orderId    Int
   order      Order   @relation(fields: [orderId], references: [id])
   productId  Int

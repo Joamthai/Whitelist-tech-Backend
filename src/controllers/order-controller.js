@@ -12,6 +12,7 @@ exports.createOrder = async (req, res, next) => {
         product: true,
       },
     });
+
     if (!foundCartItem)
       return next(createError('CART ITEM IS NOT EXISTED', 400));
 
@@ -20,16 +21,19 @@ exports.createOrder = async (req, res, next) => {
         productId: el.product.id,
         price: el.product.price,
         amount: el.amount,
-        tatolPrice: el.amount * el.product.price,
+        totalPrice: el.amount * el.product.price,
       };
     });
-
     const order = await prisma.order.create({
       data: {
         paySlip: '',
-        status: 'PENDING',
         userId: req.user.id,
-        orderitems: { create: orderItemObj },
+        addressId: +req.body.address,
+        orderItems: { create: orderItemObj },
+      },
+      include: {
+        user: true,
+        address: true,
       },
     });
 
@@ -38,7 +42,7 @@ exports.createOrder = async (req, res, next) => {
         userId: req.user.id,
       },
     });
-
+    console.log(order);
     res.status(201).json({ order });
   } catch (error) {
     next(error);
@@ -47,23 +51,33 @@ exports.createOrder = async (req, res, next) => {
 
 exports.getOrder = async (req, res, next) => {
   try {
-    const order = await prisma.order.findMany({
-      where: {
-        userId: req.user.id,
-      },
-      include: {
-        orderitems: {
-          include: {
-            product: true,
-          },
-        },
-        user: {
-          include: {
-            addresses: true,
-          },
-        },
-      },
-    });
+    const order =
+      req.user.role === 'ADMIN'
+        ? await prisma.order.findMany({
+            include: {
+              user: true,
+              address: true,
+              orderItems: {
+                include: {
+                  product: true,
+                },
+              },
+            },
+          })
+        : await prisma.order.findMany({
+            where: {
+              userId: req.user.id,
+            },
+            include: {
+              user: true,
+              address: true,
+              orderItems: {
+                include: {
+                  product: true,
+                },
+              },
+            },
+          });
 
     res.status(200).json({ order });
   } catch (error) {
@@ -77,7 +91,7 @@ exports.getOrderItem = async (req, res, next) => {
         userId: req.user.id,
       },
       include: {
-        orderitems: {
+        orderItems: {
           include: {
             product: true,
           },
@@ -102,7 +116,7 @@ exports.deleteOrder = async (req, res, next) => {
     });
     if (!foundOrder) return next(createError('CART ITEM IS NOT EXISTED', 400));
 
-    await prisma.orderitem.deleteMany({
+    await prisma.orderItem.deleteMany({
       where: {
         orderId: foundOrder.id,
       },
@@ -118,20 +132,13 @@ exports.deleteOrder = async (req, res, next) => {
   }
 };
 
-exports.updateOrder = async (req, res, next) => {
+exports.uploadPaySlipOrder = async (req, res, next) => {
   try {
-    console.log(req.body);
     const url = await upload(req.file.path);
 
     if (!req.file) {
       return next(createError('ORDER IMAGE IS REQUIRED'));
     }
-
-    const foundAddress = await prisma.address.findFirst({
-      where: {
-        id: +req.body.address,
-      },
-    });
 
     const foundOrder = await prisma.order.findFirst({
       where: {
@@ -142,15 +149,103 @@ exports.updateOrder = async (req, res, next) => {
     const order = await prisma.order.update({
       data: {
         paySlip: url,
+      },
+      where: {
+        id: +foundOrder.id,
+      },
+    });
+    res.status(200).json({ order });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.confirmOrder = async (req, res, next) => {
+  try {
+    const foundOrder = await prisma.order.findFirst({
+      where: {
+        id: +req.body.id,
+      },
+    });
+    if (!foundOrder) return next(createError('ORDER IS NOT EXISTED', 400));
+    const order = await prisma.order.update({
+      data: {
         status: 'PAID',
       },
       where: {
         id: foundOrder.id,
       },
     });
-    order.address = foundAddress;
+    res.status(201).json({ order });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.rejectOrder = async (req, res, next) => {
+  try {
+    console.log(req.body);
+    const foundOrder = await prisma.order.findFirst({
+      where: {
+        id: +req.body.id,
+      },
+    });
+
+    const order = await prisma.order.update({
+      data: {
+        paySlip: '',
+      },
+      where: {
+        id: foundOrder.id,
+      },
+    });
+    res.status(201).json({ order });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.shippedOrder = async (req, res, next) => {
+  try {
+    console.log(req.body);
+    const foundOrder = await prisma.order.findFirst({
+      where: {
+        id: +req.body.id,
+      },
+    });
+
+    const order = await prisma.order.update({
+      data: {
+        status: 'SHIPPED',
+      },
+      where: {
+        id: foundOrder.id,
+      },
+    });
+    res.status(201).json({ order });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.receivedOrder = async (req, res, next) => {
+  try {
+    const foundOrder = await prisma.order.findFirst({
+      where: {
+        id: +req.body.id,
+      },
+    });
+
+    const order = await prisma.order.update({
+      data: {
+        status: 'DELIVERED',
+      },
+      where: {
+        id: foundOrder.id,
+      },
+    });
     console.log(order);
-    res.status(200).json({ order });
+    res.status(201).json({ order });
   } catch (error) {
     next(error);
   }

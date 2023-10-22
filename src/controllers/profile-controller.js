@@ -8,11 +8,13 @@ const {
 
 exports.createAddress = async (req, res, next) => {
   try {
+    console.log(req.user);
     const { value, error } = addressSchema.validate(req.body);
     if (error) {
       return next(error);
     }
-    value.userId = req.user.id;
+    value.userId = +req.user.id;
+    console.log(value);
     const address = await prisma.address.create({
       data: value,
     });
