@@ -1,4 +1,3 @@
-const fs = require('fs/promises');
 const prisma = require('../models/prisma');
 const createError = require('../utils/create-error');
 const { upload } = require('../utils/cloudinary-service');
@@ -10,6 +9,7 @@ const {
 
 exports.createProduct = async (req, res, next) => {
   try {
+    console.log(req.file);
     const url = await upload(req.file.path);
     const { value, error } = createProductSchema.validate(req.body);
     if (error) return next(error);

@@ -1,10 +1,12 @@
 const prisma = require('../models/prisma');
-const { checkUserSchema } = require('../validators/auth-validator');
 
 exports.addToCart = async (req, res, next) => {
   try {
     const cartItem = await prisma.cartItem.create({
       data: req.body,
+      include: {
+        product: true,
+      },
     });
     res.status(201).json({ cartItem });
   } catch (error) {
@@ -19,13 +21,12 @@ exports.updateAmount = async (req, res, next) => {
         productId: req.body.productId,
       },
     });
-    console.log(foundCartItem.amount + req.body.amount);
     if (!foundCartItem)
       return next(createError('CART ITEM IS NOT EXISTED', 400));
 
     await prisma.cartItem.update({
       data: {
-        amount: foundCartItem.amount + req.body.amount,
+        amount: req.body.amount,
       },
       where: {
         id: foundCartItem.id,
@@ -61,6 +62,7 @@ exports.deleteFromCart = async (req, res, next) => {
   try {
     const foundCartItem = await prisma.cartItem.findFirst({
       where: {
+        userId: req.user.id,
         productId: +req.params.id,
       },
     });

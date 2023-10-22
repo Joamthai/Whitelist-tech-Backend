@@ -40,6 +40,8 @@ model Address {
   updatedAt   DateTime @updatedAt
   userId      Int
   user        User     @relation(fields: [userId], references: [id])
+  orderId     Int
+  order       Order    @relation(fields: [orderId], references: [id])
 }
 
 model Order {
@@ -52,6 +54,7 @@ model Order {
   user         User           @relation(fields: [userId], references: [id])
   orderitems   Orderitem[]
   shippingInfo ShippingInfo[]
+  Address      Address[]
 }
 
 enum OrderStatus {

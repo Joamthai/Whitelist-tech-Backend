@@ -80,6 +80,9 @@ exports.getAllAddress = async (req, res, next) => {
     where: {
       userId: req.user.id,
     },
+    include: {
+      user: true,
+    },
   });
   res.status(200).json({ addresses });
 };
