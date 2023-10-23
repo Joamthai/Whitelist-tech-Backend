@@ -16,15 +16,17 @@ exports.addToCart = async (req, res, next) => {
 
 exports.updateAmount = async (req, res, next) => {
   try {
+    console.log(req.body);
     const foundCartItem = await prisma.cartItem.findFirst({
       where: {
-        productId: req.body.productId,
+        productId: req.body.product.id,
+        userId: req.user.id,
       },
     });
     if (!foundCartItem)
       return next(createError('CART ITEM IS NOT EXISTED', 400));
 
-    await prisma.cartItem.update({
+    const cartItem = await prisma.cartItem.update({
       data: {
         amount: req.body.amount,
       },
@@ -32,8 +34,8 @@ exports.updateAmount = async (req, res, next) => {
         id: foundCartItem.id,
       },
     });
-
-    res.status(200).json({ msg: 'UPDATED' });
+    console.log(cartItem);
+    res.status(200).json(cartItem);
   } catch (error) {
     next(error);
   }

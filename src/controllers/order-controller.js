@@ -24,6 +24,7 @@ exports.createOrder = async (req, res, next) => {
         totalPrice: el.amount * el.product.price,
       };
     });
+
     const order = await prisma.order.create({
       data: {
         paySlip: '',
@@ -36,6 +37,18 @@ exports.createOrder = async (req, res, next) => {
         address: true,
       },
     });
+    console.log(foundCartItem);
+
+    for (let i = 0; i < foundCartItem.length; i++) {
+      await prisma.product.update({
+        data: {
+          stock: foundCartItem[i].product.stock - foundCartItem[i].amount,
+        },
+        where: {
+          id: foundCartItem[i].product.id,
+        },
+      });
+    }
 
     await prisma.cartItem.deleteMany({
       where: {
