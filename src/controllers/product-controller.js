@@ -23,15 +23,11 @@ exports.createProduct = async (req, res, next) => {
 
     const product = await prisma.product.create({
       data: value,
-    });
-
-    const category = await prisma.category.findFirst({
-      where: {
-        id: product.categoryId,
+      include: {
+        category: true,
       },
     });
 
-    product.category = category;
     res.status(201).json({ product });
   } catch (error) {
     next(error);
@@ -140,16 +136,8 @@ exports.getProductBack = async (req, res, next) => {
 
 exports.getAllProducts = async (req, res, next) => {
   const products = await prisma.product.findMany({
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      image: true,
-      stock: true,
-      price: true,
-      categoryId: true,
+    include: {
       category: true,
-      deleted: true,
     },
   });
 
