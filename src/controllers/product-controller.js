@@ -1,3 +1,5 @@
+const fs = require('fs/promises');
+
 const prisma = require('../models/prisma');
 const createError = require('../utils/create-error');
 const { upload } = require('../utils/cloudinary-service');
@@ -9,10 +11,11 @@ const {
 
 exports.createProduct = async (req, res, next) => {
   try {
-    console.log(req.file);
     const url = await upload(req.file.path);
+
     const { value, error } = createProductSchema.validate(req.body);
     if (error) return next(error);
+
     if (!req.file) {
       return next(createError('PRODUCT IMAGE IS REQUIRED'));
     }
@@ -32,28 +35,51 @@ exports.createProduct = async (req, res, next) => {
     res.status(201).json({ product });
   } catch (error) {
     next(error);
+  } finally {
+    if (req.file) {
+      fs.unlink(req.file.path);
+    }
   }
 };
 
 exports.updateProduct = async (req, res, next) => {
-  delete req.body.category;
-  const { value, error } = updateProductSchema.validate(req.body);
-  if (error) return next(error);
+  try {
+    delete req.body.category;
+    delete req.body.image;
 
-  const foundProduct = await prisma.product.findFirst({
-    where: {
-      id: value.id,
-    },
-  });
+    const { value, error } = updateProductSchema.validate(req.body);
+    if (error) return next(error);
 
-  if (!foundProduct) return next(createError('PRODUCT IS NOT EXISTS'));
-  const product = await prisma.product.update({
-    data: value,
-    where: {
-      id: value.id,
-    },
-  });
-  res.status(200).json({ product });
+    const foundProduct = await prisma.product.findFirst({
+      where: {
+        id: value.id,
+      },
+    });
+
+    if (!foundProduct) return next(createError('PRODUCT IS NOT EXISTS'));
+
+    if (req.file) {
+      const url = await upload(req.file.path);
+      value.image = url;
+    }
+
+    const product = await prisma.product.update({
+      data: value,
+      where: {
+        id: value.id,
+      },
+      include: {
+        category: true,
+      },
+    });
+    res.status(200).json({ product });
+  } catch (error) {
+    next(error);
+  } finally {
+    if (req.file) {
+      fs.unlink(req.file.path);
+    }
+  }
 };
 
 exports.deleteProduct = async (req, res, next) => {
@@ -69,7 +95,38 @@ exports.deleteProduct = async (req, res, next) => {
 
     if (!foundProduct) return next(createError('PRODUCT IS NOT EXISTED', 400));
 
-    await prisma.product.delete({
+    await prisma.product.update({
+      data: {
+        deleted: true,
+      },
+      where: {
+        id: value.id,
+      },
+    });
+
+    res.status(200).json({ message: 'DELETED' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getProductBack = async (req, res, next) => {
+  try {
+    const { value, error } = selectProductSchema.validate(req.params);
+    if (error) return next(error);
+
+    const foundProduct = await prisma.product.findFirst({
+      where: {
+        id: value.id,
+      },
+    });
+
+    if (!foundProduct) return next(createError('PRODUCT IS NOT EXISTED', 400));
+
+    await prisma.product.update({
+      data: {
+        deleted: false,
+      },
       where: {
         id: value.id,
       },
@@ -92,6 +149,7 @@ exports.getAllProducts = async (req, res, next) => {
       price: true,
       categoryId: true,
       category: true,
+      deleted: true,
     },
   });
 

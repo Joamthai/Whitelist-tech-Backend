@@ -16,7 +16,6 @@ exports.addToCart = async (req, res, next) => {
 
 exports.updateAmount = async (req, res, next) => {
   try {
-    console.log(req.body);
     const foundCartItem = await prisma.cartItem.findFirst({
       where: {
         productId: req.body.product.id,
@@ -34,12 +33,12 @@ exports.updateAmount = async (req, res, next) => {
         id: foundCartItem.id,
       },
     });
-    console.log(cartItem);
     res.status(200).json(cartItem);
   } catch (error) {
     next(error);
   }
 };
+
 exports.getCartItem = async (req, res, next) => {
   try {
     const cartItem = await prisma.cartItem.findMany({

@@ -1,3 +1,5 @@
+const fs = require('fs/promises');
+
 const prisma = require('../models/prisma');
 const { upload } = require('../utils/cloudinary-service');
 const createError = require('../utils/create-error');
@@ -37,7 +39,6 @@ exports.createOrder = async (req, res, next) => {
         address: true,
       },
     });
-    console.log(foundCartItem);
 
     for (let i = 0; i < foundCartItem.length; i++) {
       await prisma.product.update({
@@ -55,7 +56,6 @@ exports.createOrder = async (req, res, next) => {
         userId: req.user.id,
       },
     });
-    console.log(order);
     res.status(201).json({ order });
   } catch (error) {
     next(error);
@@ -97,6 +97,7 @@ exports.getOrder = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.getOrderItem = async (req, res, next) => {
   try {
     const order = await prisma.order.findMany({
@@ -170,6 +171,10 @@ exports.uploadPaySlipOrder = async (req, res, next) => {
     res.status(200).json({ order });
   } catch (error) {
     next(error);
+  } finally {
+    if (req.file) {
+      fs.unlink(req.file.path);
+    }
   }
 };
 
@@ -185,6 +190,10 @@ exports.confirmOrder = async (req, res, next) => {
       data: {
         status: 'PAID',
       },
+      include: {
+        address: true,
+        user: true,
+      },
       where: {
         id: foundOrder.id,
       },
@@ -197,7 +206,6 @@ exports.confirmOrder = async (req, res, next) => {
 
 exports.rejectOrder = async (req, res, next) => {
   try {
-    console.log(req.body);
     const foundOrder = await prisma.order.findFirst({
       where: {
         id: +req.body.id,
@@ -207,6 +215,10 @@ exports.rejectOrder = async (req, res, next) => {
     const order = await prisma.order.update({
       data: {
         paySlip: '',
+      },
+      include: {
+        address: true,
+        user: true,
       },
       where: {
         id: foundOrder.id,
@@ -220,7 +232,6 @@ exports.rejectOrder = async (req, res, next) => {
 
 exports.shippedOrder = async (req, res, next) => {
   try {
-    console.log(req.body);
     const foundOrder = await prisma.order.findFirst({
       where: {
         id: +req.body.id,
@@ -230,6 +241,10 @@ exports.shippedOrder = async (req, res, next) => {
     const order = await prisma.order.update({
       data: {
         status: 'SHIPPED',
+      },
+      include: {
+        address: true,
+        user: true,
       },
       where: {
         id: foundOrder.id,
@@ -253,11 +268,14 @@ exports.receivedOrder = async (req, res, next) => {
       data: {
         status: 'DELIVERED',
       },
+      include: {
+        address: true,
+        user: true,
+      },
       where: {
         id: foundOrder.id,
       },
     });
-    console.log(order);
     res.status(201).json({ order });
   } catch (error) {
     next(error);

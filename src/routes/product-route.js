@@ -6,8 +6,9 @@ const uploadMW = require('../middlewares/upload');
 const router = express.Router();
 
 router.post('/', uploadMW.single('image'), productController.createProduct);
-router.patch('/', authenticateMW, productController.updateProduct);
+router.patch('/', uploadMW.single('image'), productController.updateProduct);
 router.delete('/:id', authenticateMW, productController.deleteProduct);
+router.patch('/:id', authenticateMW, productController.getProductBack);
 router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProductById);
 

@@ -8,13 +8,12 @@ const {
 
 exports.createAddress = async (req, res, next) => {
   try {
-    console.log(req.user);
     const { value, error } = addressSchema.validate(req.body);
     if (error) {
       return next(error);
     }
     value.userId = +req.user.id;
-    console.log(value);
+
     const address = await prisma.address.create({
       data: value,
     });
@@ -62,7 +61,6 @@ exports.deleteAddress = async (req, res, next) => {
       },
     });
 
-    console.log(foundAddress.id);
     if (!foundAddress) return next(createError('ADDRESS IS NOT EXISTED', 400));
 
     await prisma.address.delete({
